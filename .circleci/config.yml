@@ -12,14 +12,14 @@ jobs:
 
       - restore_cache:
           key: beagle-repository-{{ checksum "pom.xml" }}
-      
+
       - run: mvn dependency:go-offline
-      
+
       - save_cache:
           paths:
             - ~/.m2
           key: beagle-repository-{{ checksum "pom.xml" }}
-      
+
       - run: mvn validate
 
       - run: mvn test-compile
@@ -27,20 +27,64 @@ jobs:
       - run: mvn verify
 
       - run: mvn package -DskipTests
-      
+
       - store_test_results:
           path: target/surefire-reports
-      
+
       - store_artifacts:
           path: target/beagle-0.0.1-SNAPSHOT.jar
 
       - setup_remote_docker
 
-      # Login
-      - run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+      # build the application image
+      - run: |
+            docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+            export DOCKERHUB_TAG=${CIRCLE_BRANCH/\//-}-${CIRCLE_BUILD_NUM}
+            case "${CIRCLE_BRANCH}" in
+                master)
+                  echo "Building docker image with tag ${DOCKERHUB_TAG} and latest."
+                  docker build --build-arg JAR_FILE=target/beagle-0.0.1-SNAPSHOT.jar -t keybird/beagle:${DOCKERHUB_TAG} .
+                  docker tag keybird/beagle:${DOCKERHUB_TAG} keybird/beagle:latest
+                  docker push keybird/beagle:${DOCKERHUB_TAG}
+                  docker push keybird/beagle:latest
+                  ;;
+                *)
+                  echo "Building docker image with tag ${DOCKERHUB_TAG}."
+                  docker build --build-arg JAR_FILE=target/beagle-0.0.1-SNAPSHOT.jar -t keybird/beagle:${DOCKERHUB_TAG} .
+                  docker push keybird/beagle:${DOCKERHUB_TAG}
+                  ;;
+              esac
 
-      # build   the application image
-      - run: docker build --build-arg JAR_FILE=target/beagle-0.0.1-SNAPSHOT.jar -t keybird/beagle:${CIRCLE_BRANCH/\//-} .
+  e2e:
+    working_directory: ~/beagle-repository
+    docker:
+      - image: circleci/openjdk:8-jdk
+    steps:
+      - checkout
 
-      # deploy the image
-      - run: docker push keybird/beagle:${CIRCLE_BRANCH/\//-}
+      # enable docker in docker
+      - setup_remote_docker
+
+      # Startup application
+      - run: |
+          export DOCKERHUB_TAG=${CIRCLE_BRANCH/\//-}-${CIRCLE_BUILD_NUM}
+          docker run -p 8080:8080 --name beagle -d keybird/beagle:${DOCKERHUB_TAG}
+          sleep 30
+          docker exec beagle curl http://localhost:8080
+
+      # Prepare e2e tests
+      - run: |
+          docker create -v /repo --name source alpine:3.4 /bin/true
+          docker cp . source:/repo
+
+      # Run e2e tests
+      - run: docker run --volumes-from source keybird/beagle-e2e:latest --troubleshoot true /repo/src/test/javascript/conf.js
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - e2e:
+          requires:
+            - build
