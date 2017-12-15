@@ -78,7 +78,7 @@ jobs:
           docker cp . source:/repo
 
       # Run e2e tests
-      - run: docker run --volumes-from source keybird/beagle-e2e:latest --troubleshoot true /repo/src/test/javascript/conf.js
+      - run: docker run --network container:beagle --volumes-from source keybird/beagle-e2e:latest --troubleshoot true /repo/src/test/javascript/conf.js
 
 workflows:
   version: 2
