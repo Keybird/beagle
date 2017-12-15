@@ -67,7 +67,7 @@ jobs:
 
       # Startup application
       - run: |
-          export DOCKERHUB_TAG=${CIRCLE_BRANCH/\//-}-${CIRCLE_BUILD_NUM}
+          export DOCKERHUB_TAG=${CIRCLE_BRANCH/\//-}-${CIRCLE_PREVIOUS_BUILD_NUM}
           docker run -p 8080:8080 --name beagle -d keybird/beagle:${DOCKERHUB_TAG}
           sleep 30
           docker exec beagle curl http://localhost:8080
