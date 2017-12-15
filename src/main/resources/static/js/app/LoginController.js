@@ -20,7 +20,7 @@
 angular.module('beagleApp')
         // TODO MVR implement check of "logged in" to every page. At the moment it is only executed when on login page
     .controller('LoginController',
-        ['$scope', '$state', '$timeout', 'AuthService',  function($scope, $state, $timeout, AuthService) {
+        ['$scope', '$state', '$interval', 'AuthService',  function($scope, $state, $interval, AuthService) {
 
             $scope.credentials = {};
             $scope.login = function() {
@@ -52,16 +52,15 @@ angular.module('beagleApp')
 
             // change it after 60 seconds
             $scope.changeBackground = function(){
-                $timeout(function() {
-                    imgIndex++;
-                    if (imgIndex >= images.length) {
-                        imgIndex = 0;
-                    }
-                    $scope.bgImage = images[imgIndex];
-                    $scope.changeBackground();
-                }, 60000)
+                imgIndex++;
+                if (imgIndex >= images.length) {
+                    imgIndex = 0;
+                }
+                $scope.bgImage = images[imgIndex];
             };
+            $interval(function() {
+                $scope.changeBackground();
+            }, 60000);
             $scope.changeBackground();
-
         }
         ]);
