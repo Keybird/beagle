@@ -21,6 +21,8 @@ package de.keybird.beagle.utils;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -29,6 +31,7 @@ import io.restassured.specification.RequestSpecification;
 
 public class RestClient implements TestRule {
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
     private String sessionId;
     private RequestSpecification spec;
 
@@ -38,6 +41,7 @@ public class RestClient implements TestRule {
 
             @Override
             public void evaluate() throws Throwable {
+                log.info("## Executing {}() ##", description.getMethodName());
                 try {
                     initRestAssured();
                     base.evaluate();
