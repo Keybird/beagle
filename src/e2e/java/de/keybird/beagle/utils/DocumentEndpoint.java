@@ -42,9 +42,4 @@ public class DocumentEndpoint extends AbstractEndpoint<DocumentDTO> {
                 .then().assertThat()
                 .statusCode(204);
     }
-
-    public void delete() {
-        acquireXsrfToken();
-        spec.delete().then().assertThat().statusCode(204);
-    }
 }

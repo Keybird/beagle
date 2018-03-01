@@ -63,7 +63,7 @@ public class JobRestController {
     public ResponseEntity listJobs() {
         final Iterable<JobEntity> all = jobRepository.findAll();
         if (!all.iterator().hasNext()) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            return ResponseUtils.noContent();
         }
         // Convert entities to DTOs (let's us fine-tune what to expose)
         final List<JobDTO> entities = StreamSupport.stream(all.spliterator(), false)
@@ -76,7 +76,7 @@ public class JobRestController {
     public ResponseEntity<List<JobExecutionDTO>> showProgress() {
         final List<JobExecutionContext> executions = jobExecutionManager.getExecutions();
         if (executions.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            return ResponseUtils.noContent();
         }
         final List<JobExecutionDTO> jobDTOList = executions.stream().map(jobExecution -> createFrom(jobExecution)).collect(Collectors.toList());
         jobDTOList.sort(Comparator.comparing(JobExecutionDTO::getId).reversed());

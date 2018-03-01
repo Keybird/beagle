@@ -57,8 +57,8 @@ public class ImportRestE2ETest {
 
     public static void doImport(RestClient client) {
         client.documents().Import(ImportRestE2ETest.class.getResourceAsStream("/Beagle.pdf"), "beagle.pdf");
-        await().atMost(1, TimeUnit.MINUTES)
-                .pollDelay(5, TimeUnit.SECONDS)
+        await().atMost(30, TimeUnit.SECONDS)
+                .pollInterval(5, TimeUnit.SECONDS)
                 .until(() -> assertThat(client.documents().list(), Matchers.hasSize(1)));
     }
 

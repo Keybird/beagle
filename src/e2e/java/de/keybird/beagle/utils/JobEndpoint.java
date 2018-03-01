@@ -26,9 +26,4 @@ public class JobEndpoint extends AbstractEndpoint {
         super(spec, JobDTO.class);
         spec.basePath("jobs");
     }
-
-    public void delete() {
-        acquireXsrfToken();
-        spec.delete().then().statusCode(204);
-    }
 }
