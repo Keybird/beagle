@@ -135,7 +135,7 @@ public class JobExecutionManagerTest {
         submittedJob.get();
 
         // Now Import and Index Jobs should run, we wait for them to finish
-        await().atMost(30, SECONDS).until(() -> jobRepository.count() == 3);
+        await().atMost(30, SECONDS).pollInterval(5, SECONDS).until(() -> jobRepository.count() == 3);
 
         // Detect + Import + Index jobs should have run
         assertThat(jobRepository.count(), is(3L));

@@ -46,7 +46,6 @@ import de.keybird.beagle.api.PageState;
 import de.keybird.beagle.jobs.persistence.ImportJobEntity;
 import de.keybird.beagle.jobs.persistence.LogLevel;
 import de.keybird.beagle.repository.DocumentRepository;
-import de.keybird.beagle.repository.PageRepository;
 import de.keybird.beagle.services.PdfManager;
 
 // Imports files to database
@@ -55,9 +54,6 @@ import de.keybird.beagle.services.PdfManager;
 public class ImportJobExecution implements JobExecution<ImportJobEntity> {
 
     private final Logger logger = LoggerFactory.getLogger(ImportJobExecution.class);
-
-    @Autowired
-    private PageRepository pageRepository;
 
     @Autowired
     private DocumentRepository documentRepository;
@@ -88,6 +84,7 @@ public class ImportJobExecution implements JobExecution<ImportJobEntity> {
 
         for (PDDocument splitDocument : splitDocuments) {
             final Page page = new Page();
+            importDocument.getPages().add(page);
             page.setDocument(importDocument);
             page.setPageNumber(index + 1);
 
@@ -115,7 +112,6 @@ public class ImportJobExecution implements JobExecution<ImportJobEntity> {
                 page.setErrorMessage(null);
                 context.logEntry(LogLevel.Success, "Page {} was imported successful", index + 1);
                 context.updateProgress(++index, splitDocuments.size());
-                pageRepository.save(page);
             } catch (Exception ex) {
                 logger.error("Error while importing page", ex);
                 page.setErrorMessage(ex.getMessage());
