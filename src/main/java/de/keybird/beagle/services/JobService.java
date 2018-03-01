@@ -67,6 +67,7 @@ public class JobService {
         indexPagesIfNecessary();
     }
 
+    @Transactional
     public void indexPagesIfNecessary() {
         // Kick of index if we have imported documents
         if (!documentRepository.findByState(DocumentState.Imported).isEmpty()) {

@@ -77,10 +77,14 @@ public class RestClient implements TestRule {
     }
 
     public DocumentEndpoint documents() {
-        return new DocumentEndpoint(spec);
+        return new DocumentEndpoint(RestAssured.given(spec));
     }
 
     public JobEndpoint jobs() {
-        return new JobEndpoint(spec);
+        return new JobEndpoint(RestAssured.given(spec));
+    }
+
+    public PageEndpoint pages() {
+        return new PageEndpoint(RestAssured.given(spec));
     }
 }

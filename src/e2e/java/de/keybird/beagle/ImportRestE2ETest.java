@@ -62,9 +62,14 @@ public class ImportRestE2ETest {
 
     @Test
     public void verifyImport() {
-        assertThat(client.documents().list(), Matchers.hasSize(0));
-        client.documents().Import(getClass().getResourceAsStream("/Beagle.pdf"), "beagle.pdf");
-        await().atMost(10, TimeUnit.SECONDS).until(() -> assertThat(client.documents().list(), Matchers.hasSize(1)));
+        doImport(client);
+    }
+
+    public static void doImport(RestClient client) {
+        client.documents().Import(ImportRestE2ETest.class.getResourceAsStream("/Beagle.pdf"), "beagle.pdf");
+        await().atMost(1, TimeUnit.MINUTES)
+                .pollDelay(5, TimeUnit.SECONDS)
+                .until(() -> assertThat(client.documents().list(), Matchers.hasSize(1)));
     }
 
 }

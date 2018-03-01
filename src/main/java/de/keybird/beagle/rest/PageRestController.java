@@ -25,6 +25,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -62,7 +64,7 @@ public class PageRestController {
     public ResponseEntity<List<Page>> listPages() {
         final Iterable<Page> pages = pageRepository.findAll();
         if (!pages.iterator().hasNext()) {
-            return new ResponseEntity(HttpStatus.NO_CONTENT);
+            return ResponseUtils.noContent();
         }
         // Convert to DTOS
         final List<PageDTO> pageDTOs = StreamSupport.stream(pages.spliterator(), false)
@@ -82,6 +84,7 @@ public class PageRestController {
     }
 
     @RequestMapping(value = "{id}", method = RequestMethod.GET)
+    @Transactional
     public ResponseEntity getPayload(@PathVariable("id") long pageId) {
         final Page page = pageRepository.findOne(pageId);
         if (page == null) {
@@ -91,6 +94,7 @@ public class PageRestController {
     }
 
     @RequestMapping(value = "{id}/thumbnail", method = RequestMethod.GET)
+    @Transactional
     public ResponseEntity getThumbnail(@PathVariable("id") long pageId) {
         final Page page = pageRepository.findOne(pageId);
         if (page == null) {

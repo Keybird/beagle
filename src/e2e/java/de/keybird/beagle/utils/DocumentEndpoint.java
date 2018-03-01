@@ -18,23 +18,16 @@
 
 package de.keybird.beagle.utils;
 
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.is;
-
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
-import de.keybird.beagle.api.Document;
+import de.keybird.beagle.rest.model.DocumentDTO;
 import io.restassured.http.ContentType;
-import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 
-public class DocumentEndpoint extends AbstractEndpoint {
+public class DocumentEndpoint extends AbstractEndpoint<DocumentDTO> {
 
     public DocumentEndpoint(RequestSpecification spec) {
-        super(spec);
+        super(spec, DocumentDTO.class);
         spec.basePath("imports");
     }
 
@@ -48,18 +41,6 @@ public class DocumentEndpoint extends AbstractEndpoint {
             .post()
                 .then().assertThat()
                 .statusCode(204);
-    }
-
-    public List<Document> list() {
-        final Response response = spec.get();
-        response.then().assertThat()
-                .contentType(ContentType.JSON)
-                .statusCode(anyOf(is(200), is(204)));
-        if (response.statusCode() == 204) {
-            return new ArrayList<>();
-        }
-        final Document[] documents = response.as(Document[].class);
-        return Arrays.asList(documents);
     }
 
     public void delete() {

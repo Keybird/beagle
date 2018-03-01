@@ -28,17 +28,34 @@
 
 package de.keybird.beagle.utils;
 
-import de.keybird.beagle.rest.model.JobDTO;
+import java.io.InputStream;
+
+import de.keybird.beagle.rest.model.PageDTO;
 import io.restassured.specification.RequestSpecification;
 
-public class JobEndpoint extends AbstractEndpoint {
-    public JobEndpoint(RequestSpecification spec) {
-        super(spec, JobDTO.class);
-        spec.basePath("jobs");
+public class PageEndpoint extends AbstractEndpoint<PageDTO> {
+
+    public PageEndpoint(RequestSpecification spec) {
+        super(spec, PageDTO.class);
+        spec.basePath("pages");
     }
 
-    public void delete() {
-        acquireXsrfToken();
-        spec.delete().then().statusCode(204);
+    public InputStream payload(Long id) {
+        final InputStream inputStream = spec.get(Long.toString(id))
+                .then().assertThat()
+                .statusCode(200)
+                .contentType("application/pdf")
+                .extract().response().asInputStream();
+        return inputStream;
+    }
+
+    public InputStream thumbnail(Long id) {
+        final InputStream inputStream = spec.get(Long.toString(id) + "/thumbnail")
+                .then().assertThat()
+                .statusCode(200)
+                .contentType("image/jpeg")
+                .extract().response().asInputStream();
+        return inputStream;
+
     }
 }
