@@ -32,6 +32,10 @@ public class LogDTO {
 
     private LogLevel level;
 
+    public LogDTO() {
+
+    }
+
     public LogDTO(LogEntity logEntity) {
         setId(logEntity.getId());
         setDate(logEntity.getDate());
