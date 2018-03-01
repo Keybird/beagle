@@ -159,7 +159,7 @@ public class JobExecutionContext<J extends JobEntity> {
         }
     }
 
-    protected void logEntry(LogLevel logLevel, String message, Object... args) {
+    public void logEntry(LogLevel logLevel, String message, Object... args) {
         // Log the message to console, to see what is going on. However if multiple jobs are running in parallel it is hard to determine
         // Where the job is coming from, therefore we append the description of the job, but only if it is not identical to the message
         if (!jobEntity.getDescription().equals(message)) {

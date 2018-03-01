@@ -24,6 +24,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import de.keybird.beagle.api.Document;
+import de.keybird.beagle.api.source.DocumentSource;
+import de.keybird.beagle.api.source.FileSystemSource;
 import de.keybird.beagle.jobs.execution.DetectJobExecution;
 import de.keybird.beagle.jobs.execution.ImportJobExecution;
 import de.keybird.beagle.jobs.execution.IndexJobExecution;
@@ -49,9 +51,13 @@ public class JobExecutionFactory {
     private Provider<JobExecutionContext> jobExecutionContextProvider;
 
     public JobRunner<DetectJobEntity> createDetectJobRunner() {
+      return createDetectJobRunner(new FileSystemSource());
+    }
+
+    public JobRunner<DetectJobEntity> createDetectJobRunner(DocumentSource documentSource) {
         final DetectJobExecution execution = detectJobExecutionProvider.get();
         final JobExecutionContext<DetectJobEntity> jobExecutionContext = jobExecutionContextProvider.get();
-        jobExecutionContext.setJobEntity(new DetectJobEntity());
+        jobExecutionContext.setJobEntity(new DetectJobEntity(documentSource));
 
         return new JobRunner<>(jobExecutionContext, execution);
     }

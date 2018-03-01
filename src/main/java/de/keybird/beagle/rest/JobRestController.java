@@ -29,6 +29,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import de.keybird.beagle.api.DocumentState;
@@ -101,6 +102,12 @@ public class JobRestController {
     public ResponseEntity startIndex() {
         jobExecutionManager.submit(jobFactory.createIndexJobRunner());
         return ResponseEntity.accepted().build();
+    }
+
+    @RequestMapping(method = RequestMethod.DELETE)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteAll() {
+        jobRepository.deleteAll();
     }
 
     public static JobExecutionDTO createFrom(JobExecutionContext context) {

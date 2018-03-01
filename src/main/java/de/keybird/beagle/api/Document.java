@@ -18,9 +18,12 @@
 
 package de.keybird.beagle.api;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -29,12 +32,16 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Lob;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import org.hibernate.annotations.BatchSize;
+
 @Entity
 @Table(name="documents")
+// TODO MVR add pages as well
 public class Document {
 
     @Id
@@ -58,6 +65,10 @@ public class Document {
     @Lob
     @Basic(fetch= FetchType.LAZY)
     private byte[] payload;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "document")
+    @BatchSize(size=100)
+    private List<Page> pages = new ArrayList<>();
 
     public Document() {
 
@@ -125,5 +136,13 @@ public class Document {
 
     public void setState(DocumentState state) {
         this.state = state;
+    }
+
+    public List<Page> getPages() {
+        return pages;
+    }
+
+    public void setPages(List<Page> pages) {
+        this.pages = pages;
     }
 }

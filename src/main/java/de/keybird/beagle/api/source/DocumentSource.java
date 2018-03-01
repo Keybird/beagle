@@ -16,21 +16,16 @@
  * along with Beagle. If not, see http://www.gnu.org/licenses/.
  */
 
-package de.keybird.beagle.repository;
+package de.keybird.beagle.api.source;
 
+import java.io.IOException;
 import java.util.List;
 
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
+import de.keybird.beagle.jobs.execution.JobExecutionContext;
+import de.keybird.beagle.jobs.persistence.JobEntity;
 
-import de.keybird.beagle.api.Document;
-import de.keybird.beagle.api.DocumentState;
+public interface DocumentSource {
+    List<DocumentEntry> getEntries(JobExecutionContext<? extends JobEntity> context) throws IOException;
 
-@Repository
-public interface DocumentRepository extends CrudRepository<Document, Long> {
-
-    Document findByChecksum(String checksum);
-
-    List<Document> findByState(DocumentState state);
-
+    void cleanUp(DocumentEntry entry);
 }

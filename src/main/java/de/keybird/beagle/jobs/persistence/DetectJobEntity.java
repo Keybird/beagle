@@ -20,10 +20,19 @@ package de.keybird.beagle.jobs.persistence;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import javax.persistence.Transient;
+
+import de.keybird.beagle.api.source.DocumentSource;
+import de.keybird.beagle.api.source.FileSystemSource;
 
 @Entity
 @DiscriminatorValue("detect")
 public class DetectJobEntity extends JobEntity {
+
+    // TODO MVR do we want to persist this?
+    @Transient
+    private DocumentSource documentSource = new FileSystemSource();
+
     @Override
     public JobType getType() {
         return JobType.Detect;
@@ -33,4 +42,17 @@ public class DetectJobEntity extends JobEntity {
     public String getDescription() {
         return "Detecting new files";
     }
+
+    public DetectJobEntity() {
+
+    }
+
+    public DetectJobEntity(DocumentSource source) {
+        this.documentSource = source;
+    }
+
+    public DocumentSource getDocumentSource() {
+        return documentSource;
+    }
+
 }

@@ -16,21 +16,16 @@
  * along with Beagle. If not, see http://www.gnu.org/licenses/.
  */
 
-package de.keybird.beagle.repository;
+package de.keybird.beagle;
 
-import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
+@Category(E2ETest.class)
+public class PageRestE2ETest {
 
-import de.keybird.beagle.api.Document;
-import de.keybird.beagle.api.DocumentState;
+    @Test
+    public void verifyXyz() {
 
-@Repository
-public interface DocumentRepository extends CrudRepository<Document, Long> {
-
-    Document findByChecksum(String checksum);
-
-    List<Document> findByState(DocumentState state);
-
+    }
 }

@@ -99,7 +99,7 @@ public class PageRestController {
         return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(page.getThumbnail());
     }
 
-    // TODO MVR we should not propagade the exception to the user,
+    // TODO MVR we should not propagate the exception to the user,
     // but have a reasonable response return
     @RequestMapping(value="search", method=RequestMethod.GET)
     public ResponseEntity search(@RequestParam("query") String query) throws IOException {

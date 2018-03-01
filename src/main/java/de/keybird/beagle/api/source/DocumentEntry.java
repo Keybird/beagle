@@ -16,21 +16,11 @@
  * along with Beagle. If not, see http://www.gnu.org/licenses/.
  */
 
-package de.keybird.beagle.repository;
+package de.keybird.beagle.api.source;
 
-import java.util.List;
+import java.io.IOException;
 
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
-
-import de.keybird.beagle.api.Document;
-import de.keybird.beagle.api.DocumentState;
-
-@Repository
-public interface DocumentRepository extends CrudRepository<Document, Long> {
-
-    Document findByChecksum(String checksum);
-
-    List<Document> findByState(DocumentState state);
-
+public interface DocumentEntry {
+    String getName();
+    byte[] getPayload() throws IOException;
 }
