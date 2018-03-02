@@ -18,12 +18,11 @@
 
 package de.keybird.beagle;
 
-import static com.jayway.awaitility.Awaitility.await;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 
 import java.util.concurrent.TimeUnit;
 
-import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -47,7 +46,7 @@ public class ImportRestE2ETest {
     public void deleteAll() {
         client.jobs().delete();
         client.documents().delete();
-        assertThat(client.documents().list(), Matchers.hasSize(0));
+        assertThat(client.documents().list(), hasSize(0));
     }
 
     @Test
@@ -56,10 +55,7 @@ public class ImportRestE2ETest {
     }
 
     public static void doImport(RestClient client) {
-        client.documents().Import(ImportRestE2ETest.class.getResourceAsStream("/Beagle.pdf"), "beagle.pdf");
-        await().atMost(30, TimeUnit.SECONDS)
-                .pollInterval(5, TimeUnit.SECONDS)
-                .until(() -> assertThat(client.documents().list(), Matchers.hasSize(1)));
+        client.documents().doImport(ImportRestE2ETest.class.getResourceAsStream("/Beagle.pdf"), "beagle.pdf", 1);
     }
 
 }

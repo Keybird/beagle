@@ -18,8 +18,17 @@
 
 package de.keybird.beagle.utils;
 
-import java.io.InputStream;
+import static com.jayway.awaitility.Awaitility.await;
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 
+import java.io.InputStream;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import de.keybird.beagle.api.DocumentState;
 import de.keybird.beagle.rest.model.DocumentDTO;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
@@ -33,7 +42,7 @@ public class DocumentEndpoint extends AbstractEndpoint<DocumentDTO> {
 
     public void Import(InputStream inputStream, String name) {
         acquireXsrfToken(ContentType.BINARY);
-        spec.given()
+        given(spec)
                 .log().headers()
                 .contentType(ContentType.BINARY)
                 .queryParam("name", name)
@@ -41,5 +50,16 @@ public class DocumentEndpoint extends AbstractEndpoint<DocumentDTO> {
             .post()
                 .then().assertThat()
                 .statusCode(204);
+    }
+
+    public void doImport(InputStream inputStream, String name, int expectedDocumentCount) {
+        Import(inputStream, name);
+        await().atMost(30, TimeUnit.SECONDS)
+                .pollInterval(5, TimeUnit.SECONDS)
+                .until(() -> {
+                    final List<DocumentDTO> documents = list();
+                    assertThat(documents, hasSize(expectedDocumentCount));
+                    assertThat(DocumentState.Imported, is(documents.get(0).getState()));
+                });
     }
 }
