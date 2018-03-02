@@ -98,7 +98,6 @@ jobs:
 
       # Prepare e2e tests
       - run: |
-          mvn clean install -DskipTests
           docker create -v /repo --name source alpine:3.4 /bin/true
           docker cp . source:/repo
 
