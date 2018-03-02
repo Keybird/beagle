@@ -1,0 +1,5 @@
+version: '2.2'
+services:
+  app:
+    image: keybird/beagle:${DOCKERHUB_TAG}
+    container_name: beagle

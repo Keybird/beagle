@@ -59,7 +59,9 @@ public class DocumentEndpoint extends AbstractEndpoint<DocumentDTO> {
                 .until(() -> {
                     final List<DocumentDTO> documents = list();
                     assertThat(documents, hasSize(expectedDocumentCount));
-                    assertThat(DocumentState.Imported, is(documents.get(0).getState()));
+                    for (int i=0;i<expectedDocumentCount; i++) {
+                        assertThat(DocumentState.Imported, is(documents.get(i).getState()));
+                    }
                 });
     }
 }

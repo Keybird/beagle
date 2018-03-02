@@ -200,6 +200,7 @@
 						<exclude>images.adoc</exclude>
 						<exclude>todo.adoc</exclude>
 						<exclude>LICENSE</exclude>
+						<exclude>yarn.lock</exclude>
 						<exclude>**/Dockerfile</exclude>
 						<exclude>node_modules/**</exclude>
 						<exclude>**/logback.xml</exclude>
