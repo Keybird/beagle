@@ -100,7 +100,7 @@ class AbstractEndpoint<T> {
         spec.delete().then().assertThat().statusCode(204);
 
         // Wait until it is actually deleted
-        await().atMost(30, TimeUnit.SECONDS)
+        await().atMost(60, TimeUnit.SECONDS)
                 .pollInterval(5, TimeUnit.SECONDS)
                 .until(() -> assertThat(list(), hasSize(0)));
     }

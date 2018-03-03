@@ -22,6 +22,7 @@ import java.util.Date;
 
 import de.keybird.beagle.api.Document;
 import de.keybird.beagle.api.DocumentState;
+import de.keybird.beagle.api.PageState;
 
 public class DocumentDTO {
 
@@ -34,6 +35,8 @@ public class DocumentDTO {
     private String errorMessage;
 
     private int pageCount;
+    // number of pages indexed
+    private int indexedCount;
 
     private DocumentState state;
 
@@ -51,6 +54,7 @@ public class DocumentDTO {
         setImportDate(document.getImportDate());
         setPageCount(document.getPageCount());
         setState(document.getState());
+        setIndexedCount((int) document.getPages().stream().filter(p -> p.getState() == PageState.Indexed).count());
     }
 
     public Long getId() {
@@ -107,5 +111,13 @@ public class DocumentDTO {
 
     public void setImportDate(Date importDate) {
         this.importDate = importDate;
+    }
+
+    public void setIndexedCount(int indexedCount) {
+        this.indexedCount = indexedCount;
+    }
+
+    public int getIndexedCount() {
+        return indexedCount;
     }
 }

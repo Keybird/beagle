@@ -55,13 +55,16 @@ public class DocumentEndpoint extends AbstractEndpoint<DocumentDTO> {
 
     public void doImport(InputStream inputStream, String name, int expectedDocumentCount) {
         Import(inputStream, name);
-        await().atMost(5, MINUTES)
+        await().atMost(120, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> {
                     final List<DocumentDTO> documents = list();
                     assertThat(documents, hasSize(expectedDocumentCount));
                     for (int i=0;i<expectedDocumentCount; i++) {
+                        // each document should be imported
                         assertThat(documents.get(i).getState(), is(DocumentState.Imported));
+                        // each page should be indexed
+                        assertThat(documents.get(i).getPageCount(), is(documents.get(i).getIndexedCount()));
                     }
                 });
     }
