@@ -12,7 +12,14 @@ webdriver-manager version
 java -version
 curl --version
 
-# Download all dependencies
+# Prepare environment to execute java tests
+echo "Building Java tests"
+mvn clean verify -B -DskipTests || exit 1
+
+echo "Running Java tests"
+mvn test -B -P e2e || exit 1
+
+# Download all UI dependencies
 yarn
 
 # start selenium server in background
@@ -24,10 +31,3 @@ webdriver-manager status
 
 echo "Running UI tests"
 protractor --troubleshoot true --baseUrl='http://localhost:8080' src/test/javascript/conf.js || exit 1
-
-# Prepare environment to execute java tests
-echo "Building Java tests"
-mvn clean verify -B -DskipTests || exit 1
-
-echo "Running Java tests"
-mvn test -B -P e2e || exit 1
