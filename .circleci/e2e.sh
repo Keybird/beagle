@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# The chrome version provided by the e2e docker image
+CHROME_VERSION="77.0.3865.120"
+
 # show versions
 echo "yarn" $(yarn --version)
 echo "npm" $(npm --version)
@@ -14,8 +17,8 @@ yarn
 
 # start selenium server in background
 echo "Starting selenium server"
-webdriver-manager update
-webdriver-manager start &
+webdriver-manager update --versions.chrome ${CHROME_VERSION}
+webdriver-manager start --versions.chrome ${CHROME_VERSION} &
 sleep 5 # wait for the driver to fully start
 webdriver-manager status
 
