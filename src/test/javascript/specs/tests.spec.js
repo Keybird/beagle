@@ -121,7 +121,7 @@ describe('Beagle Tests', function() {
             element(by.id("searchQueryButton")).click();
 
             var searchItems = element.all(by.repeater("item in searchResult"));
-            expect(searchItems.count()).toEqual(10);
+            expect(searchItems.count()).toEqual(4);
         })
     })
 
