@@ -75,11 +75,11 @@ public class DetectJobExecution implements JobExecution<DetectJob> {
 
                 // Ensure it is not already persisted
                 if (documentRepository.findByChecksum(hashCode.toString()) != null) {
-                    context.logEntry(LogLevel.Warn, "Document '{}' was rejected. Reason: Document already exists.", entry);
+                    context.logEntry(LogLevel.Warn, "Document '{}' was rejected. Reason: Document already exists.", entry.getName());
                 } else if (payload == null || payload.length == 0) {
-                    context.logEntry(LogLevel.Warn, "Document '{}' was rejected. Reason: Payload is null or empty.", entry);
+                    context.logEntry(LogLevel.Warn, "Document '{}' was rejected. Reason: Payload is null or empty.", entry.getName());
                 } else {
-                    context.logEntry(LogLevel.Success, "Document '{}' was accepted.", entry);
+                    context.logEntry(LogLevel.Success, "Document '{}' was accepted.", entry.getName());
                     documentRepository.save(theDocument);
 
                     // Cleanup

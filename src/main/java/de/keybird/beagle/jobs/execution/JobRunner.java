@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
+import javax.transaction.Transactional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,14 +36,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.support.TransactionOperations;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.google.common.eventbus.EventBus;
 
+import de.keybird.beagle.api.Document;
 import de.keybird.beagle.events.JobExecutionProgressChangedEvent;
 import de.keybird.beagle.events.JobExecutionStartedEvent;
 import de.keybird.beagle.events.JobExecutionStateChangedEvent;
+import de.keybird.beagle.jobs.ArchiveJob;
+import de.keybird.beagle.jobs.DetectJob;
+import de.keybird.beagle.jobs.ImportJob;
+import de.keybird.beagle.jobs.IndexJob;
+import de.keybird.beagle.jobs.Job;
+import de.keybird.beagle.jobs.JobState;
 import de.keybird.beagle.jobs.JobVisitor;
+import de.keybird.beagle.jobs.LogEntry;
+import de.keybird.beagle.jobs.LogLevel;
 import de.keybird.beagle.jobs.Progress;
 import de.keybird.beagle.jobs.persistence.ArchiveJobEntity;
 import de.keybird.beagle.jobs.persistence.DetectJobEntity;
@@ -50,14 +60,7 @@ import de.keybird.beagle.jobs.persistence.ImportJobEntity;
 import de.keybird.beagle.jobs.persistence.IndexJobEntity;
 import de.keybird.beagle.jobs.persistence.JobEntity;
 import de.keybird.beagle.jobs.persistence.LogEntity;
-import de.keybird.beagle.jobs.ArchiveJob;
-import de.keybird.beagle.jobs.DetectJob;
-import de.keybird.beagle.jobs.ImportJob;
-import de.keybird.beagle.jobs.IndexJob;
-import de.keybird.beagle.jobs.Job;
-import de.keybird.beagle.jobs.JobState;
-import de.keybird.beagle.jobs.LogEntry;
-import de.keybird.beagle.jobs.LogLevel;
+import de.keybird.beagle.repository.DocumentRepository;
 import de.keybird.beagle.repository.JobRepository;
 
 // TODO MVR es wird jetzt zwar geloggt, welche dokumente usw. abgewiesen wurden, aber ein übergeordneter status für die dokumente, pages fehlt noch
@@ -80,7 +83,7 @@ public class JobRunner<T extends Job> implements JobExecutionContext<T> {
     private JobRepository jobRepository;
 
     @Autowired
-    private TransactionOperations transactionTemplate;
+    private DocumentRepository documentRepository;
 
     @Value("${working.directory}")
     private Path workingPath;
@@ -101,7 +104,15 @@ public class JobRunner<T extends Job> implements JobExecutionContext<T> {
         this.archivePath = workingPath.resolve("2_archive");
     }
 
+    @Transactional
     public void execute(T job, JobExecution<T> execution) {
+        if (!TransactionSynchronizationManager.isActualTransactionActive()) {
+            throw new IllegalStateException("No active Session/Transaction found. Bailing");
+        }
+        executeInTransactionScope(job, execution);
+    }
+
+    private void executeInTransactionScope(T job, JobExecution<T> execution) {
         this.job = Objects.requireNonNull(job);
         Objects.requireNonNull(execution);
 
@@ -112,18 +123,10 @@ public class JobRunner<T extends Job> implements JobExecutionContext<T> {
             execution.execute(this);
 
             success();
-
-            transactionTemplate.execute((status) -> {
-                onSuccess();
-                return null;
-            });
+            onSuccess();
         } catch (Throwable t) {
             error(t);
-
-            transactionTemplate.execute((status) -> {
-                onError(t);
-                return null;
-            });
+            onError(t);
 
             // We want to propagate properly without having to add Exception to the signature
             if (t instanceof RuntimeException) {
@@ -133,10 +136,7 @@ public class JobRunner<T extends Job> implements JobExecutionContext<T> {
             }
             throw new RuntimeException(t);
         } finally {
-            transactionTemplate.execute((status) -> {
-                complete();
-                return null;
-            });
+            complete();
         }
     }
 
@@ -243,7 +243,11 @@ public class JobRunner<T extends Job> implements JobExecutionContext<T> {
 
                     @Override
                     public JobEntity visit(ImportJob importJob) {
-                        final ImportJobEntity importJobEntity = new ImportJobEntity(importJob.getDocument());
+                        final Document importedDocument = documentRepository.findOne(importJob.getDocumentId());
+                        if (importedDocument == null) {
+                            throw new IllegalStateException("Document with id " + importJob.getDocumentId() + " not found");
+                        }
+                        final ImportJobEntity importJobEntity = new ImportJobEntity(importedDocument);
                         applyDefaults(importJobEntity);
                         return importJobEntity;
                     }

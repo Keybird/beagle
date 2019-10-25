@@ -82,7 +82,6 @@ public class JobService {
         documentRepository
                 .findByState(DocumentState.New)
                 .forEach(document -> {
-                    document.getPayload(); // lazy load property
                     jobManager.submit(new ImportJob(document));
                 });
         indexPagesIfNecessary();

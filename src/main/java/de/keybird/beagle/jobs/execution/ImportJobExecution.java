@@ -60,20 +60,23 @@ public class ImportJobExecution implements JobExecution<ImportJob> {
 
     @Override
     public void execute(JobExecutionContext<ImportJob> context) throws Exception {
-        context.logEntry(LogLevel.Info, "Importing '{}'", context.getJob().getDocument().getFilename());
+        context.logEntry(LogLevel.Info, "Importing '{}'", context.getJob().getFilename());
+
+        final Document importDocument = documentRepository.findOne(context.getJob().getDocumentId());
+        if (importDocument == null) {
+            context.logEntry(LogLevel.Error, "Document with id {} not found.", context.getJob().getDocumentId());
+            return;
+        }
 
         context.setSuccessHandler(theContext -> {
-            theContext.getJob().getDocument().setState(DocumentState.Imported);
-            theContext.getJob().getDocument().setErrorMessage(null);
-            documentRepository.save(theContext.getJob().getDocument());
+            importDocument.setState(DocumentState.Imported);
+            importDocument.setErrorMessage(null);
         });
 
         context.setErrorHandler((theContext, throwable) -> {
-            theContext.getJob().getDocument().setErrorMessage(throwable.getMessage());
-            documentRepository.save(theContext.getJob().getDocument());
+            importDocument.setErrorMessage(throwable.getMessage());
         });
 
-        final Document importDocument = context.getJob().getDocument();
         final PDDocument pdfDocument = PdfManager.load(importDocument.getPayload());
         final Splitter splitter = new Splitter();
         final List<PDDocument> splitDocuments = splitter.split(pdfDocument);

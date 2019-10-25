@@ -24,10 +24,13 @@ import de.keybird.beagle.api.Document;
 
 public class ImportJob extends Job {
 
-    private final Document document;
+    private final Long documentId;
+    private final String filename;
 
     public ImportJob(Document theDocument) {
-        this.document = Objects.requireNonNull(theDocument);
+        Objects.requireNonNull(theDocument);
+        this.documentId = Objects.requireNonNull(theDocument.getId());
+        this.filename = Objects.requireNonNull(theDocument.getFilename());
     }
 
     @Override
@@ -37,7 +40,7 @@ public class ImportJob extends Job {
 
     @Override
     public String getDescription() {
-        return String.format("Importing '%s'", getDocument().getFilename());
+        return String.format("Importing '%s'", filename);
     }
 
     @Override
@@ -45,7 +48,11 @@ public class ImportJob extends Job {
         return visitor.visit(this);
     }
 
-    public Document getDocument() {
-        return document;
+    public String getFilename() {
+        return filename;
+    }
+
+    public Long getDocumentId() {
+        return documentId;
     }
 }

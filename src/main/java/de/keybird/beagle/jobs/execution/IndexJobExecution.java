@@ -24,6 +24,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +33,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.support.TransactionOperations;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
@@ -64,7 +65,7 @@ public class IndexJobExecution implements JobExecution<IndexJob> {
     private PageRepository pageRepository;
 
     @Autowired
-    private TransactionOperations transactionTemplate;
+    private EntityManager entityManager;
 
     @Value("${index.bulkSize}")
     private int bulkSize;
@@ -79,44 +80,42 @@ public class IndexJobExecution implements JobExecution<IndexJob> {
     }
 
     public void execute(JobExecutionContext<IndexJob> context) {
-        final List<Long> importedPages = pageRepository.findByState(PageState.Imported, pageRequest).stream().map(p -> p.getId()).collect(Collectors.toList());
-        final int totalSize = importedPages.size() == pageRequest.getPageSize() ? pageRequest.getPageSize() : importedPages.size();
+        final List<Page> pagesToImport = pageRepository.findByState(PageState.Imported, pageRequest).stream().collect(Collectors.toList());
+        final int totalSize = pagesToImport.size() == pageRequest.getPageSize() ? pageRequest.getPageSize() : pagesToImport.size();
         context.updateProgress(0, totalSize);
 
         // Now partition and index
         try {
-            if (importedPages.isEmpty()) {
+            if (pagesToImport.isEmpty()) {
                 LOG.warn("No pages are available for indexing.");
                 return;
             }
-            final List<List<Long>> partitions = Lists.partition(importedPages, bulkSize);
             int offset = 0;
-            for (List<Long> partition : partitions) {
-                // Initialize all pages of transaction
-                List<Page> pagesToImport = transactionTemplate.execute(status -> partition.stream().map(id -> {
-                    final Page page = pageRepository.findOne(id);
-                    page.getPayload();
-                    return page;
-                }).collect(Collectors.toList()));
+            while(!pagesToImport.isEmpty()) {
+                final List<List<Page>> partitions = Lists.partition(pagesToImport, bulkSize);
+                final List<Page> partition = partitions.get(0);
 
                 // Perform Indexing
-                indexBatch(context, pagesToImport, offset, partition.size());
+                boolean success = indexBatch(context, partition, offset, partition.size());
 
                 // Flush the data
-                transactionTemplate.execute(status -> {
-                    pageRepository.save(pagesToImport);
-                    return null;
-                });
+                entityManager.flush();
 
+                // Cleanup
                 offset += partition.size();
                 context.updateProgress(offset);
+                pagesToImport.removeAll(partition);
+
+                if (!success) {
+                    return;
+                }
             }
         } finally {
             context.updateProgress(totalSize);
         }
     }
 
-    private void indexBatch(JobExecutionContext<IndexJob> context, List<Page> partition, int offset, int batchSize) {
+    private boolean indexBatch(JobExecutionContext<IndexJob> context, List<Page> partition, int offset, int batchSize) {
         context.logEntry(LogLevel.Info, "{}/{}", offset == 0 ? offset : offset + 1, offset + batchSize);
 
         try {
@@ -136,6 +135,7 @@ public class IndexJobExecution implements JobExecution<IndexJob> {
                 page.setErrorMessage(null);
                 context.logEntry(LogLevel.Success, "Page {}/{} was indexed successfully", page.getDocument().getFilename(), page.getPageNumber());
             });
+            return true;
         } catch (IOException e) {
             partition.forEach(page -> {
                 LOG.error("Could not index page {}. Reason: ", page.getName(), e.getMessage());
@@ -143,6 +143,7 @@ public class IndexJobExecution implements JobExecution<IndexJob> {
                 context.logEntry(LogLevel.Error, "Page {}/{} could not be indexed. Reason: {}", page.getDocument().getFilename(), page.getPageNumber(), e.getMessage());
             });
             context.setErrorMessage("All pages were not indexed properly: " + e.getMessage());
+            return false;
         }
     }
 
