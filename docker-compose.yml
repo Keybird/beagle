@@ -64,6 +64,16 @@ services:
       - ELASTIC_USERNAME=elastic
       - ELASTIC_PASSWORD=changeme
       - WORKING_DIRECTORY=/opt/beagle
+    healthcheck:
+      interval: 10s
+      timeout: 3s
+      retries: 6
+  # Dummy application so docker-compose up -d will wait until the beagle is actually reachable
+  dummy:
+    image: hello-world
+    depends_on:
+      app:
+        condition: service_healthy
 
 volumes:
   esdata:
