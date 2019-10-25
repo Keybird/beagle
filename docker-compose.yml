@@ -9,6 +9,11 @@ services:
         - cluster.name=beagle-cluster
         - bootstrap.memory_lock=true
         - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      healthcheck:
+        test: ["CMD-SHELL", "curl --silent --fail -u elastic:changeme http://localhost:9200/_cluster/health || exit 1"]
+        interval: 30s
+        timeout: 30s
+        retries: 3
       ulimits:
         memlock:
           soft: -1
@@ -27,11 +32,19 @@ services:
       - POSTGRES_DB=beagle
       - POSTGRES_USER=beagleuser
       - POSTGRES_PASSWORD=beaglepassword
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -q -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
   # TODO MVR allow/figure out how to define more ram
   app:
     image: keybird/beagle:latest
     depends_on:
-      - beagledb
+      beagledb:
+          condition: service_healthy
+      elasticsearch:
+          condition: service_healthy
     volumes:
       - beagledata:/opt/beagle
     ports:
