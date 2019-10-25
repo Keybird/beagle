@@ -49,6 +49,7 @@ import de.keybird.beagle.rest.model.PageDTO;
 import io.searchbox.client.JestClient;
 import io.searchbox.core.Search;
 import io.searchbox.core.SearchResult;
+import io.searchbox.params.Parameters;
 
 @RestController
 @RequestMapping("/pages")
@@ -124,6 +125,7 @@ public class PageRestController {
                 .addIndex("documents")
                 .addType("pages")
                 .addSourceExcludePattern("data")
+                .setParameter(Parameters.SIZE, 50) // TODO MVR size handling
                 .build();
         final SearchResult result = jestClient.execute(search);
         final Set<PageDTO> pages = new HashSet<>();
