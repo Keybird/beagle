@@ -38,27 +38,37 @@ public class AttachmentPipelineInitializer {
     private final Logger LOG = LoggerFactory.getLogger(AttachmentPipelineInitializer.class);
 
     private final JestClient jestClient;
-
     private final JSONObject config;
+    private final int retryCount;
 
-    public AttachmentPipelineInitializer(JestClient jestClient) throws IOException {
+    public AttachmentPipelineInitializer(final JestClient jestClient) throws IOException {
+        this(jestClient, 3);
+    }
+
+    public AttachmentPipelineInitializer(final JestClient jestClient, final int retryCount) {
         final JSONTokener tokener = new JSONTokener(getClass().getResourceAsStream("/elastic/pipeline-attachment-config.json"));
         this.config = new JSONObject(tokener);
         this.jestClient = Objects.requireNonNull(jestClient);
+        this.retryCount = retryCount;
     }
 
     public void initialize() throws IOException {
+        LOG.trace("Checking if attachment pipeline must be initialized...");
         if (!isInitialized()) {
+            LOG.debug("Initialization required. Initializing attachment pipeline with config: {}", config);
             doInitialize();
             if (!isInitialized()) {
+                LOG.warn("Could not initialize properly. Bailing");
                 throw new IOException("Not initialized properly");
             }
+        } else {
+            LOG.trace("Initialization not required");
         }
     }
 
     public boolean isInitialized() throws IOException {
         final Ingest ingest = new Ingest.PipelineBuilder().build();
-        final JestResult result = new LimitedRetriesRequestExecutor(5000, 10).execute(jestClient, ingest);
+        final JestResult result = new LimitedRetriesRequestExecutor(5000, retryCount).execute(jestClient, ingest);
         final JsonObject received = result.getJsonObject();
         if (received.has("attachment")) {
             final JSONTokener tokener = new JSONTokener(received.getAsJsonObject("attachment").toString());
@@ -73,9 +83,9 @@ public class AttachmentPipelineInitializer {
                 .withMethod("PUT")
                 .withName("attachment")
                 .build();
-        final JestResult result = new LimitedRetriesRequestExecutor(5000, 12).execute(jestClient, ingest);
+        final JestResult result = new LimitedRetriesRequestExecutor(5000, retryCount).execute(jestClient, ingest);
         if (!result.isSucceeded()) {
-            // TODO MVR extract message from json
+            LOG.warn("Tried to initialize attachment endpoint with config but failed: {}", config);
             throw new IllegalStateException("Pipeline was not properly initialized: " + result.getErrorMessage());
         }
     }
