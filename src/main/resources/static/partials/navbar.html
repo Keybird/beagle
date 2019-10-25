@@ -8,9 +8,9 @@
     <div id="navbarTop" class="navbar-collapse collapse">
         <form class="form-inline my-2 my-lg-0 mr-2" role="form">
             <div class="input-group input-group-sm">
-                <input class="form-control" type="search" placeholder="Search for..." aria-label="Search" ng-model="searchQuery">
+                <input id="searchQueryInput" class="form-control" type="search" placeholder="Search for..." aria-label="Search" ng-model="searchQuery">
                 <span class="input-group-btn">
-                    <button type="submit" ng-click="search()" class="btn btn-info" role="button"><i class="fa fa-search"></i></button>
+                    <button id="searchQueryButton" type="submit" ng-click="search()" class="btn btn-info" role="button"><i class="fa fa-search"></i></button>
                 </span>
             </div>
         </form>

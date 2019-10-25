@@ -112,4 +112,17 @@ describe('Beagle Tests', function() {
        }) ;
     });
 
+    // We assume that the java tests have been running, so they posted the beagle pdf's already
+    // This means if we search for beagle, we should get a few documents as a result back
+    describe('Search', function() {
+
+        it('Beagle documents are indexed properly', function() {
+            element(by.id("searchQueryInput")).sendKeys("beagle");
+            element(by.id("searchQueryButton")).click();
+
+            var searchItems = element.all(by.repeater("item in searchResult"));
+            expect(searchItems.count()).toEqual(10);
+        })
+    })
+
 });
