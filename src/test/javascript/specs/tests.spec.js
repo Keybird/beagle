@@ -112,16 +112,34 @@ describe('Beagle Tests', function() {
        }) ;
     });
 
-    // We assume that the java tests have been running, so they posted the beagle pdf's already
+    // We assume that the java tests have been running, so they posted the beagle pdf already
+    describe('Documents', function() {
+        it('Are index properly', function() {
+            browser.get(browser.baseUrl + "#!/documents");
+            var documents = element.all(by.repeater("page in pages"));
+            expect(documents.count()).toEqual(15);
+
+            var states = element.all(by.repeater("page in pages").column("page.state"));
+            expect(states.count()).toEqual(15);
+
+            // Verify each state is Indexed
+            states.each(function(ele) {
+               ele.getText().then(function(text) {
+                   expect(text).toEqual("Indexed");
+               })
+            });
+        });
+    });
+
     // This means if we search for beagle, we should get a few documents as a result back
     describe('Search', function() {
 
-        it('Beagle documents are indexed properly', function() {
+        it('works', function() {
             element(by.id("searchQueryInput")).sendKeys("beagle");
             element(by.id("searchQueryButton")).click();
 
             var searchItems = element.all(by.repeater("item in searchResult"));
-            expect(searchItems.count()).toEqual(4);
+            expect(searchItems.count()).toEqual(14);
         })
     })
 
