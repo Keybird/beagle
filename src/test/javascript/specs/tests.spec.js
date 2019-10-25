@@ -83,7 +83,7 @@ describe('Beagle Tests', function() {
             verifyUserDetails();
         });
 
-        it('are properly loaded on page relod', function() {
+        it('are properly loaded on page reload', function() {
             doLogin();
             verifyUserDetails();
             browser.refresh();
