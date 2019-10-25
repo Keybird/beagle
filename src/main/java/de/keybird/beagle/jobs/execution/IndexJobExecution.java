@@ -87,7 +87,7 @@ public class IndexJobExecution implements JobExecution<IndexJob> {
             context.logEntry(LogLevel.Success, "Initializing elastic pipeline for attachments was successful");
         } catch (IOException ex) {
             context.setErrorMessage(ex.getMessage());
-            context.logEntry(LogLevel.Success, "Initializing elastic pipeline for attachments failed. Reason: {}", ex.getMessage(), ex);
+            context.logEntry(LogLevel.Error, "Initializing elastic pipeline for attachments failed. Reason: {}", ex.getMessage(), ex);
             return;
         }
 
