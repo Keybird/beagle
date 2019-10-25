@@ -73,17 +73,24 @@ public class IndexJobExecution implements JobExecution<IndexJob> {
     @Value("${index.retryCount}")
     private int retryCount;
 
+    @Value("${index.pipeline.retryCount}")
+    private int pipelineInitRetryCount;
+
+    @Value("${index.pipeline.retryDelay}")
+    private int pipelineInitRetryDelay;
+
     private Pageable pageRequest;
 
     public void setPageRequest(Pageable pageRequest) {
         this.pageRequest = pageRequest;
     }
 
+    @Override
     public void execute(JobExecutionContext<IndexJob> context) {
         // Before we do anything, let's initialize the elastic backend
         try {
             context.logEntry(LogLevel.Info, "Initializing elastic pipeline for attachments ...");
-            new AttachmentPipelineInitializer(client).initialize();
+            new AttachmentPipelineInitializer(client, pipelineInitRetryCount, pipelineInitRetryDelay).initialize();
             context.logEntry(LogLevel.Success, "Initializing elastic pipeline for attachments was successful");
         } catch (IOException ex) {
             context.setErrorMessage(ex.getMessage());

@@ -40,16 +40,14 @@ public class AttachmentPipelineInitializer {
     private final JestClient jestClient;
     private final JSONObject config;
     private final int retryCount;
+    private final int retryDelay;
 
-    public AttachmentPipelineInitializer(final JestClient jestClient) throws IOException {
-        this(jestClient, 3);
-    }
-
-    public AttachmentPipelineInitializer(final JestClient jestClient, final int retryCount) {
+    public AttachmentPipelineInitializer(final JestClient jestClient, final int retryCount, final int retryDelay) {
         final JSONTokener tokener = new JSONTokener(getClass().getResourceAsStream("/elastic/pipeline-attachment-config.json"));
         this.config = new JSONObject(tokener);
         this.jestClient = Objects.requireNonNull(jestClient);
         this.retryCount = retryCount;
+        this.retryDelay = retryDelay;
     }
 
     public void initialize() throws IOException {
@@ -68,7 +66,7 @@ public class AttachmentPipelineInitializer {
 
     public boolean isInitialized() throws IOException {
         final Ingest ingest = new Ingest.PipelineBuilder().build();
-        final JestResult result = new LimitedRetriesRequestExecutor(5000, retryCount).execute(jestClient, ingest);
+        final JestResult result = new LimitedRetriesRequestExecutor(retryDelay, retryCount - 1).execute(jestClient, ingest);
         final JsonObject received = result.getJsonObject();
         if (received.has("attachment")) {
             final JSONTokener tokener = new JSONTokener(received.getAsJsonObject("attachment").toString());
@@ -83,7 +81,7 @@ public class AttachmentPipelineInitializer {
                 .withMethod("PUT")
                 .withName("attachment")
                 .build();
-        final JestResult result = new LimitedRetriesRequestExecutor(5000, retryCount).execute(jestClient, ingest);
+        final JestResult result = new LimitedRetriesRequestExecutor(retryDelay, retryCount - 1).execute(jestClient, ingest);
         if (!result.isSucceeded()) {
             LOG.warn("Tried to initialize attachment endpoint with config but failed: {}", config);
             throw new IllegalStateException("Pipeline was not properly initialized: " + result.getErrorMessage());
