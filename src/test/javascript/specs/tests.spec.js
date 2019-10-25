@@ -27,6 +27,15 @@ describe('Beagle Tests', function() {
         element(by.name("loginBtn")).click();
     };
 
+    describe('Login', function() {
+        it('is required', function() {
+            browser.get(browser.baseUrl + "#!/jobs");
+
+            expect(element(by.xpath("//h2")).getText()).toContain("Project Beagle");
+            expect(element(by.id("session_expired")).getText()).toContain("session expired");
+        });
+    });
+
     describe('login page', function() {
 
         beforeEach(function() {
@@ -60,6 +69,26 @@ describe('Beagle Tests', function() {
             // Verify logged in
             expect(element(by.xpath("//main/h2")).getText()).toBe("Home");
         });
+    });
+
+    describe('User details', function() {
+        var verifyUserDetails = function() {
+            var xpathExpression = "//a[@class='nav-link dropdown-toggle']";
+            expect(element(by.xpath(xpathExpression)).getText()).toContain("Test User");
+            expect(element(by.xpath(xpathExpression + "/img")).getAttribute("src")).toContain("/img/avatars/avatar3.jpg");
+        };
+
+        it('are properly loaded', function() {
+            doLogin();
+            verifyUserDetails();
+        });
+
+        it('are properly loaded on page relod', function() {
+            doLogin();
+            verifyUserDetails();
+            browser.refresh();
+            verifyUserDetails();
+        })
     });
 
     describe('profile page', function() {

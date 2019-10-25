@@ -20,11 +20,14 @@ var app = angular.module('beagleApp', ['ui.router', 'ui.bootstrap', 'ngStomp', '
 app.constant('urls', {
 });
 
-app.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', 'cfpLoadingBarProvider',
-    function($stateProvider, $urlRouterProvider, $httpProvider, cfpLoadingBarProvider) {
+app.config(['$stateProvider', '$urlRouterProvider', '$httpProvider',
+    function($stateProvider, $urlRouterProvider, $httpProvider) {
 
         // Required by spring security to not sent authentication headers back to client (prevents browser's credentials dialog)
         $httpProvider.defaults.headers.common["X-Requested-With"] = 'XMLHttpRequest';
+
+        // Intercept various responses (e.g. for 401/403 responses)
+        $httpProvider.interceptors.push('InterceptorService');
 
         $stateProvider
             .state('home', {
@@ -34,7 +37,10 @@ app.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', 'cfpLoading
             .state('login', {
                 templateUrl: 'views/login.html',
                 controller: 'LoginController',
-                url: '/login'
+                url: '/login',
+                params: {
+                    session_expired: false
+                }
             })
             .state('imports', {
                 templateUrl: 'views/imports.html',
@@ -72,6 +78,46 @@ app.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', 'cfpLoading
         $urlRouterProvider.otherwise('/login');
     }]);
 
-app.run(['AuthService', function(AuthService) {
-    AuthService.authenticate();
+app.factory('InterceptorService',['$q', '$rootScope', '$injector', function($q, $rootScope, $injector) {
+    return {
+        responseError: function (rejection) {
+            if (rejection.status === 401) {
+                // When a login request is ongoing and a 401 is returned, it is simply ignored
+                var AuthService = $injector.get("AuthService"); // Otherwise we have loop
+                if (AuthService.authenticating === true && (rejection.config.url.startsWith("user") || rejection.config.url.startsWith("/user"))) {
+                    // Login in progress. Do not interfere.
+                } else {
+                    console.error('Login Required', rejection, rejection.headers);
+                    $rootScope.$emit('loginRequired');
+                }
+            }
+            if (rejection.status === 403) {
+                $rootScope.$emit('permissionDenied');
+            }
+            return $q.reject(rejection);
+        }
+    }
+}]);
+
+app.run(['$rootScope', '$state', 'AuthService', function($rootScope, $state, AuthService) {
+    $rootScope.$on('loginRequired', function() {
+        $state.go("login", { session_expired: true });
+    });
+
+    $rootScope.$on('permissionDenied', function() {
+        console.log("Permission denied. Not yet implemented");
+    });
+
+    $rootScope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams)  {
+        // In case the user is not authenticated (probably triggered by a page reload) and tries to access not the login page
+        // the user profile is attempted to load. If this fails, it means the cookie is no longer valid and the user needs to login
+        // However the user will then be redirected by the 401 interceptor instead
+        if (AuthService.authenticating !== true && AuthService.isAuthenticated() === false && toState.name !== 'login') {
+            AuthService.loadProfile({}, function() {
+                if (!AuthService.isAuthenticated()) {
+                    event.preventDefault();
+                }
+            });
+        }
+    });
 }]);

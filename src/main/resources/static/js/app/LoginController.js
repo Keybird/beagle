@@ -21,7 +21,6 @@ angular.module('beagleApp')
         // TODO MVR implement check of "logged in" to every page. At the moment it is only executed when on login page
     .controller('LoginController',
         ['$scope', '$state', '$interval', 'AuthService',  function($scope, $state, $interval, AuthService) {
-
             $scope.credentials = {};
             $scope.login = function() {
                 AuthService.authenticate($scope.credentials, function() {
@@ -33,6 +32,11 @@ angular.module('beagleApp')
                     }
                 })
             };
+
+            // If user is required to login, show indication
+            if ($state.params.session_expired === true) {
+                $scope.session_expired = true;
+            }
 
             // Handle login-image
             var images = [

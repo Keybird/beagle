@@ -97,7 +97,9 @@ public class JobRestController {
         // TODO MVR use service for this?
         documentRepository
             .findByState(DocumentState.New)
-            .forEach(theImport -> jobExecutionManager.submit(new ImportJob(theImport)));
+            .forEach(document -> {
+                jobExecutionManager.submit(new ImportJob(document));
+            });
         return ResponseEntity.accepted().build();
     }
 

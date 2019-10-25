@@ -14,22 +14,23 @@ jobs:
       - checkout
 
       - restore_cache:
-          key: beagle-repository-{{ checksum "pom.xml" }}
+          keys:
+            - beagle-repository-v2-{{ checksum "pom.xml" }}
+            - beagle-repository-v2
 
-      - run: mvn dependency:go-offline
+      - run:
+          name: Remove Beagle artifacts from Maven Repository
+          command: rm -rf ~/.m2/repository/de/keybird
+
+      - run: mvn validate
+      - run: mvn test-compile
+      - run: mvn verify
+      - run: mvn package -DskipTests
 
       - save_cache:
           paths:
             - ~/.m2
-          key: beagle-repository-{{ checksum "pom.xml" }}
-
-      - run: mvn validate
-
-      - run: mvn test-compile
-
-      - run: mvn verify
-
-      - run: mvn package -DskipTests
+          key: beagle-repository-v2-{{ checksum "pom.xml" }}
 
       - store_test_results:
           path: target/surefire-reports
@@ -69,14 +70,16 @@ jobs:
       - checkout
 
       - restore_cache:
-          key: beagle-repository-{{ checksum "pom.xml" }}
+          keys:
+            - beagle-repository-v2-{{ checksum "pom.xml" }}
+            - beagle-repository-v2
 
       # enable docker in docker
       - setup_remote_docker
 
       # Startup application
       - run: |
-          export DOCKERHUB_TAG=${CIRCLE_BRANCH/\//-}-${CIRCLE_SHA1}
+          export DOCKERHUB_TAG=${CIRCLE_BRANCH//\//-}-${CIRCLE_SHA1}
 
           # Override settings for e2e testing
           cp .circleci/docker-compose.override.yml ./
@@ -105,8 +108,14 @@ jobs:
           command: |
             mkdir -p target/e2e
             docker cp source:/repo/target/screenshots target/e2e || exit 0
-            docker cp source:/repo/target/surefire-reports target/surefire-reports
+            docker cp source:/repo/target/surefire-reports target/surefire-reports || exit 0
           when: always
+
+      # When e2e tests are running additional dependencies are downloaded, so we save them here
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: beagle-repository-e2e-v2-{{ checksum "pom.xml" }}
 
       # Finally collect artifacts
       - store_test_results:

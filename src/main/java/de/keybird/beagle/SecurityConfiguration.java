@@ -19,6 +19,7 @@
 package de.keybird.beagle;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.Http401AuthenticationEntryPoint;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -75,6 +76,9 @@ class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         .and()
             .csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
         .and()
-            .headers().frameOptions().sameOrigin();
+            .headers().frameOptions().sameOrigin()
+        // Set a custom "WWW-Authenticate"-Header to prevent the browser to show the Basic Auth dialogue
+        .and()
+            .exceptionHandling().authenticationEntryPoint(new Http401AuthenticationEntryPoint("BasicAngular"));
     }
 }
