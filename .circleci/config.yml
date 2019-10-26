@@ -101,7 +101,7 @@ jobs:
 
       # Run e2e tests
       - run: |
-          docker run --network container:beagle --volumes-from source -w /repo keybird/beagle-e2e:latest .circleci/e2e.sh
+          docker run --network container:beagle --volumes-from source -w /repo keybird/beagle-e2e:0.1 .circleci/e2e.sh
 
       # Copy test results back
       - run:
