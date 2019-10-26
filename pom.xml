@@ -48,9 +48,26 @@
 			<version>2.0.8</version>
 		</dependency>
 		<dependency>
+			<groupId>org.opennms.features.jest</groupId>
+			<artifactId>org.opennms.features.jest.client</artifactId>
+			<version>25.0.0</version>
+			<exclusions>
+				<exclusion>
+					<groupId>io.searchbox</groupId>
+					<artifactId>jest-complete-osgi</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
 			<groupId>io.searchbox</groupId>
 			<artifactId>jest</artifactId>
 			<version>5.3.3</version>
+			<!-- 2019-10-25:  newer version is 6.3.1, but OpenNMS uses 5.3.3 so we stay on that version for now -->
+		</dependency>
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20190722</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>
@@ -252,4 +269,13 @@
 			</build>
 		</profile>
 	</profiles>
+	<repositories>
+		<repository>
+			<snapshots><enabled>false</enabled></snapshots>
+			<releases><enabled>true</enabled></releases>
+			<id>opennms-repo</id>
+			<name>OpenNMS Repository</name>
+			<url>http://maven.opennms.org/content/groups/opennms.org-release</url>
+		</repository>
+	</repositories>
 </project>

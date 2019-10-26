@@ -83,7 +83,7 @@ describe('Beagle Tests', function() {
             verifyUserDetails();
         });
 
-        it('are properly loaded on page relod', function() {
+        it('are properly loaded on page reload', function() {
             doLogin();
             verifyUserDetails();
             browser.refresh();
@@ -111,5 +111,39 @@ describe('Beagle Tests', function() {
             expect(jobs.count()).toEqual(1);
        }) ;
     });
+
+    // We assume that the java tests have been running, so they posted the beagle pdf already
+    describe('Documents', function() {
+        it('Are index properly', function() {
+            browser.get(browser.baseUrl + "#!/documents");
+            var documents = element.all(by.repeater("page in pages"));
+            expect(documents.count()).toEqual(15);
+
+            var states = element.all(by.repeater("page in pages").column("page.state"));
+            expect(states.count()).toEqual(15);
+
+            // Verify each state is Indexed
+            states.each(function(ele) {
+               ele.getText().then(function(text) {
+                   expect(text).toEqual("Indexed");
+               })
+            });
+        });
+    });
+
+    // This means if we search for beagle, we should get a few documents as a result back
+    describe('Search', function() {
+
+        it('works', function() {
+            element(by.id("searchQueryInput")).sendKeys("beagle");
+            element(by.id("searchQueryButton")).click();
+
+            // TODO MVR somehow in the container environment on circleci not all documents are
+            // searchable. Locally everything works, with containers. Should investigate further.
+            var searchItems = element.all(by.repeater("item in searchResult"));
+            expect(searchItems.count()).toBeGreaterThan(0);
+            expect(searchItems.count()).toBeLessThanOrEqual(14);
+        })
+    })
 
 });

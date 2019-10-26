@@ -5,9 +5,15 @@ services:
       # TODO MVR update to a newer version of elastic
       image: keybird/beagle-elastic:5.6.2
       environment:
+        - discovery.type=single-node
         - cluster.name=beagle-cluster
         - bootstrap.memory_lock=true
-        - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+        - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      healthcheck:
+        test: ["CMD-SHELL", "curl --silent --fail -u elastic:changeme http://localhost:9200/_cluster/health || exit 1"]
+        interval: 30s
+        timeout: 30s
+        retries: 3
       ulimits:
         memlock:
           soft: -1
@@ -26,11 +32,19 @@ services:
       - POSTGRES_DB=beagle
       - POSTGRES_USER=beagleuser
       - POSTGRES_PASSWORD=beaglepassword
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -q -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
   # TODO MVR allow/figure out how to define more ram
   app:
     image: keybird/beagle:latest
     depends_on:
-      - beagledb
+      beagledb:
+          condition: service_healthy
+      elasticsearch:
+          condition: service_healthy
     volumes:
       - beagledata:/opt/beagle
     ports:
@@ -50,6 +64,16 @@ services:
       - ELASTIC_USERNAME=elastic
       - ELASTIC_PASSWORD=changeme
       - WORKING_DIRECTORY=/opt/beagle
+    healthcheck:
+      interval: 10s
+      timeout: 3s
+      retries: 6
+  # Dummy application so docker-compose up -d will wait until the beagle is actually reachable
+  dummy:
+    image: hello-world
+    depends_on:
+      app:
+        condition: service_healthy
 
 volumes:
   esdata:
