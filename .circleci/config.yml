@@ -103,6 +103,19 @@ jobs:
       - run: |
           docker run --network container:beagle --volumes-from source -w /repo keybird/beagle-e2e:latest .circleci/e2e.sh
 
+      # Gather system logs
+      - run:
+          name: Gather system logs
+          when: always
+          command: |
+            mkdir -p target/system-logs
+            ps auxf > target/system-logs/ps
+            free -m > target/system-logs/free
+            docker-compose logs app > target/system-logs/beagle.log
+            docker-compose logs elasticsearch > target/system-logs/elasticsearch.log
+            docker-compose logs beagledb > target/system-logs/postgres.log
+            docker stats --no-stream > target/system-logs/docker_stats
+
       # Copy test results back
       - run:
           command: |
@@ -124,6 +137,8 @@ jobs:
           path: target/e2e
       - store_artifacts:
           path: target/surefire-reports
+      - store_artifacts:
+          path: target/system-logs
 
 workflows:
   version: 2
