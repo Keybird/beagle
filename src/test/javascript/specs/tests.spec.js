@@ -67,7 +67,7 @@ describe('Beagle Tests', function() {
             doLogin();
 
             // Verify logged in
-            expect(element(by.xpath("//main/h2")).getText()).toBe("Home");
+            expect(element(by.xpath("//main/h2")).getText()).toBe("Willommen zum Beagle");
         });
     });
 
